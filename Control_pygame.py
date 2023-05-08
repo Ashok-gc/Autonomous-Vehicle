@@ -38,3 +38,36 @@ def moveRight():
     Function to set the direction to right
     """
     DIRECTION = 60
+
+#  main
+_event = "STOP"  # Initialize the event variable to stop
+f_Gear = ["First Gear", "Second Gear", "Third Gear", "Fourth Gear", "Fifth Gear",
+          "Sixth Gear", "Seventh Gear", "Eighth Gear", "Ninth Gear", "Tenth Gear"]  # List of gear names
+
+def frontGear(SPEED):
+    """
+    Function to determine the front gear based on the speed value
+
+    Args:
+        SPEED (float): the speed value
+    """
+    if SPEED >= 1 and SPEED < 2:
+        print(f_Gear[0])  # Print the gear name for the current speed range
+    elif SPEED >= 2 and SPEED < 3:
+        print(f_Gear[1])
+    elif SPEED >= 3 and SPEED < 4:
+        print(f_Gear[2])
+    elif SPEED >= 4 and SPEED < 5:
+        print(f_Gear[3])
+    elif SPEED >= 5 and SPEED < 6:
+        print(f_Gear[4])
+    elif SPEED >= 6 and SPEED < 7:
+        print(f_Gear[5])
+    elif SPEED >= 7 and SPEED < 8:
+        print(f_Gear[6])
+    elif SPEED >= 8 and SPEED < 9:
+        print(f_Gear[7])
+    elif SPEED >= 9 and SPEED < 10:
+        print(f_Gear[8])
+    elif SPEED >= 10:
+        print(f_Gear[9])
