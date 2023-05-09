@@ -71,3 +71,50 @@ def frontGear(SPEED):
         print(f_Gear[8])
     elif SPEED >= 10:
         print(f_Gear[9])
+
+# Set the flag for the exit key
+exit_key_pressed = False
+
+while not exit_key_pressed:  # Loop until the exit key is pressed
+    for event in pygame.event.get():  # Iterate over the events in the Pygame event queue
+        if event.type == pygame.QUIT:  # Check if the user has requested to quit the game window
+            pygame.quit()  # Quit Pygame
+            exit_key_pressed = True  # Set the exit flag to True
+            break  # Break out of the for loop
+        if event.type == pygame.KEYDOWN:  # Check if a key has been pressed
+            if event.key == pygame.K_ESCAPE:  # Check if the escape key has been pressed
+                exit_key_pressed = True  # Set the exit flag to True
+                break  # Break out of the for loop
+            if event.key == ord('w'):  # Check if the 'w' key has been pressed
+                _event = "FORWARD"  # Set the event to move forward
+                SPEED = 1  # Set the speed to 1
+            elif event.key == ord('s'):  # Check if the 's' key has been pressed
+                _event = "BACKWARD"  # Set the event to move backward
+                SPEED = -1  # Set the speed to -1
+            # elif event.key == ord('s'):
+            #     _event = "BACKWARD"
+            #     if SPEED > -10:
+            #         SPEED -= 0.1
+            if event.key == ord('a'):  # Check if the 'a' key has been pressed
+                DIRECTION = 60  # Set the direction to left
+            elif event.key == ord('d'):  # Check if the 'd' key has been pressed
+                DIRECTION = 0  # Set the direction to right
+        if event.type == pygame.KEYUP:  # Check if a key has been released
+            if event.key == ord('w') or event.key == ord('s'):  # Check if the 'w' or 's' key has been released
+                _event = "STOP"  # Set the event to stop
+            if event.key == ord('a') or event.key == ord('d'):  # Check if the 'a' or 'd' key has been released
+                DIRECTION = 30  # Set the direction to center
+    if(_event == "FORWARD"):  # Check if the event is to move forward
+        if(SPEED < 10):  # Check if the speed is less than 10
+            SPEED = SPEED + .02  # Increase the speed by 0.02
+            frontGear(SPEED)  # Determine and print the gear based on the speed
+    elif(_event == "BACKWARD"):  # Check if the event is to move backward
+        if(SPEED > -10):  # Check if the speed is greater than -10
+            SPEED = SPEED - .02  # Decrease the speed by 0.02
+    elif(_event == "STOP"):  # Check if the event is to stop
+        if(SPEED > 0):  # Check if the speed is greater than 0
+            SPEED = SPEED - .1  # Decrease the speed by 0.1
+        elif(SPEED < 0):  # Check if the speed is less than 0
+            SPEED = SPEED + .1  # Increase the speed by 0.1
+    writeArduiono(DIRECTION, SPEED)  # Write the direction and speed values to the Arduino
+pygame.quit() 
