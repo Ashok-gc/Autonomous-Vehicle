@@ -10,13 +10,13 @@ from moviepy.editor import VideoFileClip
 # Object detection
 # Load class names
 classNames = []
-classFile = 'coco.names'
+classFile = 'models/coco.names'
 with open(classFile, 'rt') as f:
     classNames = f.read().rstrip('\n').split('\n')
 
 # Load model
-configPath = 'ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
-weightsPath = 'frozen_inference_graph.pb'
+configPath = 'models/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
+weightsPath = 'models/frozen_inference_graph.pb'
 net = cv2.dnn_DetectionModel(weightsPath, configPath)
 net.setInputSize(320, 320)
 net.setInputScale(1.0 / 127.5)
@@ -42,7 +42,7 @@ object_distance_threshold = 0.6 # meters
 object_too_close = False
 
 # Lane detection
-dist_pickle = pickle.load(open("calibration_pickle.p", "rb"))
+dist_pickle = pickle.load(open("models/calibration_pickle.p", "rb"))
 mtx = dist_pickle["mtx"]
 dist = dist_pickle["dist"]
 processed_frames = []
