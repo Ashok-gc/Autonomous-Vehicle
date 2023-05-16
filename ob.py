@@ -6,11 +6,7 @@ from tracker import tracker
 from moviepy.editor import VideoFileClip
 # import warnings
 
-
-green_lower = np.array([0, 100, 0], dtype=np.uint8)
-green_upper = np.array([100, 255, 100], dtype=np.uint8)
-red_lower = np.array([0, 0, 100], dtype=np.uint8)
-red_upper = np.array([100, 100, 255], dtype=np.uint8)
+object_inside_box = False
 
 
 # Load class names
@@ -297,12 +293,11 @@ def process_image(img):
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
 
-
-
-
             # Check if the object is too close
             if distance < object_distance_threshold:
                 object_too_close = True  
+
+                #changes the color of the lane to red if an object is too close
                 cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])  # Change inner lane color to red
             else:
                 cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
@@ -384,7 +379,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture("pv.mp4")
+cap = cv2.VideoCapture("video.mp4")
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
