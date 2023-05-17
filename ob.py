@@ -317,6 +317,12 @@ def process_image(img):
         font_scale = 0.5
         font_thickness = 2
 
+
+
+
+
+
+
         warning_color = (0, 0, 255)
 
         # Change the inner_lane color to red if an object is too close
@@ -379,7 +385,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture("video.mp4")
+cap = cv2.VideoCapture(0)
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
