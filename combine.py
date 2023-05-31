@@ -1,109 +1,82 @@
 import cv2
-import time
-import serial
+import numpy as np
 import pygame
 import sys
-import numpy as np
-import pickle
-from tracker import tracker
-from moviepy.editor import VideoFileClip
+from pygame.locals import *
 
-# ... Import the necessary libraries and define variables ...
-
-# Initialize pygame
-pygame.init()
-pygame.display.set_mode(size=(640, 480))
-pygame.key.set_repeat()
-
-# Initialize serial communication with Arduino
-ser = serial.Serial('COM9', 9600, timeout=1)
-ser.flush()
-
-# ... Define the necessary functions and variables ...
-
-object_inside_box = False
-
-
-# Load class names
+# Load class names and model
 classNames = []
-classFile = 'models/coco.names'
-with open(classFile, 'rt') as f:
+with open('models/coco.names', 'rt') as f:
     classNames = f.read().rstrip('\n').split('\n')
 
-# Load model
-configPath = 'models/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
-weightsPath = 'models/frozen_inference_graph.pb'
-net = cv2.dnn_DetectionModel(weightsPath, configPath)
-net.setInputSize(320, 320)
-net.setInputScale(1.0 / 127.5)
-net.setInputMean((127.5, 127.5, 127.5))
-net.setInputSwapRB(True)
+net = cv2.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb', 'models/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt')
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
 # Set threshold to detect objects
-thres = 0.45
+confThreshold = 0.45
 
-# Focal length of camera (in mm)
-focalLength = 10
+# Initialize Pygame
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption('Object Detection')
+clock = pygame.time.Clock()
 
-# Define the background color
-bg_color = (117, 117, 117)
+def process_events():
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
 
-#line color
-line_color = (0, 0, 255)
+def display_text(text, position):
+    font = pygame.font.SysFont(None, 20)
+    text_surface = font.render(text, True, (255, 255, 255))
+    screen.blit(text_surface, position)
 
-# Set threshold distance for objects
-object_distance_threshold = 0.6 # meters
+def main():
+    cap = cv2.VideoCapture(0)
 
-# Initialize a flag to check if any object is too close
-object_too_close = False
+    while True:
+        process_events()
 
-# Lane detection
-dist_pickle = pickle.load(open("models/calibration_pickle.p", "rb"))
-mtx = dist_pickle["mtx"]
-dist = dist_pickle["dist"]
-processed_frames = []
+        ret, frame = cap.read()
 
+        if not ret:
+            break
 
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        blob = cv2.dnn.blobFromImage(frame_rgb, size=(300, 300), swapRB=True)
+        net.setInput(blob)
+        detections = net.forward()
 
-# Object and lane detection function
-def objectLaneDetection(img):
-    # ... Object and lane detection code ...
+        h, w, _ = frame.shape
 
-    # Return the modified image with object and lane detections
-    return img
+        for i in range(detections.shape[2]):
+            confidence = detections[0, 0, i, 2]
+            if confidence > confThreshold:
+                classId = int(detections[0, 0, i, 1])
+                className = classNames[classId - 1]
+                x = int(detections[0, 0, i, 3] * w)
+                y = int(detections[0, 0, i, 4] * h)
+                x2 = int(detections[0, 0, i, 5] * w)
+                y2 = int(detections[0, 0, i, 6] * h)
 
-# Set the flag for the exit key
-exit_key_pressed = False
+                cv2.rectangle(frame, (x, y), (x2, y2), (0, 255, 0), thickness=2)
+                cv2.putText(frame, className, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), thickness=2)
 
-# Start the video capture
-cap = cv2.VideoCapture("video.mp4")
+                object_name = f'{className}: {confidence:.2f}'
+                display_text(object_name, (10, 10 + i * 20))
 
-# Create the video writer for the output
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec
-out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720))  # Output file name, codec, fps, size of frames
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = np.rot90(frame)
+        frame = pygame.surfarray.make_surface(frame)
+        screen.blit(frame, (0, 0))
 
-while not exit_key_pressed:
-    # Read the next frame from the video capture
-    success, img = cap.read()
+        pygame.display.flip()
+        clock.tick(30)
 
-    # Process the image with object and lane detection
-    processed_img = objectLaneDetection(img)
+    cap.release()
+    cv2.destroyAllWindows()
 
-    # Write the processed image to the video writer
-    out.write(processed_img)
-
-    # Display the processed image
-    cv2.imshow("Output", processed_img)
-
-    # ... Handle keyboard events and control the Arduino ...
-
-    # Exit on 's' key press
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord('s'):
-        break
-
-# Release the video capture and close windows
-cap.release()
-out.release()
-cv2.destroyAllWindows()
-pygame.quit()
+if __name__ == '__main__':
+    main()
