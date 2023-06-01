@@ -241,7 +241,6 @@ def process_image(img):
     else:
         turn_direction = 'Straight'
         
-
     # Object detection
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
 
@@ -275,18 +274,15 @@ def process_image(img):
             
             cv2.putText(img, str(distance) + " m", (box[0] + 200, box[1] + 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-
-# not working---------------------------------------------------------------------------------------------------------------
-
-          
+         
             # object_too_close = False
 
-            # Check if the object is too close
+            # check if the object is too close
             if distance < object_distance_threshold:
                 object_too_close = True  
 
     if object_too_close:
-        # Display warning text when an object is too close
+        # display warning text when an object is too close
         font = cv2.FONT_HERSHEY_SIMPLEX
         warning_text = "WARNING: Object too close!"
         text_position = (50, 200)
@@ -295,7 +291,7 @@ def process_image(img):
 
         warning_color = (0, 0, 255)
 
-        # Change the inner_lane color to red if an object is too close
+        # change the inner_lane color to red if an object is too close
         cv2.fillPoly(road, [inner_lane], color=[0, 0, 255])
 
         cv2.putText(result, warning_text, text_position, font, font_scale, warning_color, font_thickness)
@@ -303,9 +299,7 @@ def process_image(img):
         warning_text = "No objects detected-Keep going!"
         cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
 
-# color not working---------------------------------------------------------------------------------------------------------------
-
-    # Get the width of the image
+    # get the width of the image
     img_width = result.shape[1]
     
     # Draw a filled rectangle as the background
@@ -320,10 +314,9 @@ def process_image(img):
     # Assistance
     cv2.putText(result, 'Direction Assistance:'+ ' '+turn_direction, (30, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
-# Draw a vertical line to separate text
+    # a vertical line to separate text
     line_height = result.shape[0] // 5  # set the line height to half of the image height
     cv2.line(result, (360, 0), (360, line_height), (0, 0, 0), thickness=1)
-
 
     # detected objects
     cv2.putText(result, 'Detected Objects', (830, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
@@ -354,9 +347,8 @@ def process_image(img):
     final_result = cv2.addWeighted(result, 1, img, 0.5, 0)
     return final_result
 
-
 # For video clip or real-time
-cap = cv2.VideoCapture("pv.mp4")
+cap = cv2.VideoCapture("video.mp4")
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec

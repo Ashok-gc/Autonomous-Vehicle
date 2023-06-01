@@ -2,11 +2,9 @@ import cv2
 import time  
 import serial  
 import pygame 
-
 pygame.init()  
 
 pygame.display.set_mode(size=(640, 480)) 
-
 pygame.key.set_repeat()  
 
 ser = serial.Serial('COM9', 9600, timeout=1) 
@@ -16,17 +14,14 @@ SPEED = 0
 DIRECTION = 30  
 
 def writeArduiono(d, s):
-
     ACTION = (str(d) + "#" + str(s) + "\n").encode('utf-8')  
     ser.write(ACTION)  
     line = ser.readline().decode('utf-8').rstrip() 
 
 def moveLeft():
-
     DIRECTION = 0
 
 def moveRight():
-
     DIRECTION = 60
 
 #  main
