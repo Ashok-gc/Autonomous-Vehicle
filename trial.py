@@ -2,30 +2,11 @@ import sys
 import cv2
 import numpy as np
 import pickle
-import serial
-import pygame
 from tracker import tracker
 from moviepy.editor import VideoFileClip
-
-pygame.init()
-pygame.display.set_mode((640, 480))
-pygame.key.set_repeat()
-
-
-ser = serial.Serial('COM9', 9600, timeout=1)
-
-ser.flush() 
-
-SPEED = 0  
-DIRECTION = 30  
-
 # import warnings
 
 object_inside_box = False
-
-object_too_close = False
-
-warning_displayed = False
 
 
 # Load class names
@@ -58,94 +39,14 @@ line_color = (0, 0, 255)
 # Set threshold distance for objects
 object_distance_threshold = 0.6 # meters
 
-# # Initialize a flag to check if any object is too close
-# object_too_close = False
+# Initialize a flag to check if any object is too close
+object_too_close = False
 
 # Lane detection
 dist_pickle = pickle.load(open("models/calibration_pickle.p", "rb"))
 mtx = dist_pickle["mtx"]
 dist = dist_pickle["dist"]
 processed_frames = []
-
-def writeArduino(d, s):
-    ACTION = (str(d) + "#" + str(s) + "\n").encode('utf-8')  
-    ser.write(ACTION)  
-    line = ser.readline().decode('utf-8').rstrip() 
-
-def moveLeft():
-    DIRECTION = 0
-
-def moveRight():
-    DIRECTION = 60
-
-_event = "STOP" 
-f_Gear = ["First Gear", "Second Gear", "Third Gear", "Fourth Gear", "Fifth Gear",
-          "Sixth Gear", "Seventh Gear", "Eighth Gear", "Ninth Gear", "Tenth Gear"] 
-
-def frontGear(SPEED):
-
-    if SPEED >= 1 and SPEED < 2:
-        print(f_Gear[0])  
-    elif SPEED >= 2 and SPEED < 3:
-        print(f_Gear[1])
-    elif SPEED >= 3 and SPEED < 4:
-        print(f_Gear[2])
-    elif SPEED >= 4 and SPEED < 5:
-        print(f_Gear[3])
-    elif SPEED >= 5 and SPEED < 6:
-        print(f_Gear[4])
-    elif SPEED >= 6 and SPEED < 7:
-        print(f_Gear[5])
-    elif SPEED >= 7 and SPEED < 8:
-        print(f_Gear[6])
-    elif SPEED >= 8 and SPEED < 9:
-        print(f_Gear[7])
-    elif SPEED >= 9 and SPEED < 10:
-        print(f_Gear[8])
-    elif SPEED >= 10:
-        print(f_Gear[9])
-
-# Set the flag for the exit key
-exit_key_pressed = False
-
-while not exit_key_pressed:  
-    for event in pygame.event.get():  
-        if event.type == pygame.QUIT:  
-            pygame.quit()  # Quit Pygame
-            exit_key_pressed = True  
-            break  
-        if event.type == pygame.KEYDOWN:  
-            if event.key == pygame.K_ESCAPE: 
-                exit_key_pressed = True  
-                break  
-            if event.key == ord('w'):  
-                _event = "FORWARD"  
-                SPEED = 1 
-            elif event.key == ord('s'): 
-                _event = "BACKWARD" 
-                SPEED = -1 
-            if event.key == ord('a'):  
-                DIRECTION = 60 
-            elif event.key == ord('d'): 
-                DIRECTION = 0  
-        if event.type == pygame.KEYUP:  
-            if event.key == ord('w') or event.key == ord('s'): 
-                _event = "STOP"  
-            if event.key == ord('a') or event.key == ord('d'):  
-                DIRECTION = 30  
-    if(_event == "FORWARD"): 
-        if(SPEED < 10):  
-            SPEED = SPEED + .02  
-            frontGear(SPEED) 
-    elif(_event == "BACKWARD"):  
-        if(SPEED > -10):  
-            SPEED = SPEED - .02 
-    elif(_event == "STOP"):  
-        if(SPEED > 0):  
-            SPEED = SPEED - .1  
-        elif(SPEED < 0): 
-            SPEED = SPEED + .1  
-    writeArduino(DIRECTION, SPEED)  
 
 
 # Functions for lane detection
@@ -340,7 +241,17 @@ def process_image(img):
         turn_direction = 'Turn Left'
     else:
         turn_direction = 'Straight'
-        
+
+    # Calculate the difference between the left and right lane lines
+lane_difference = right_fitx - left_fitx
+
+# Check if lane lines are detected
+if np.any(lane_difference):
+    # Fill the inner lane with green color
+    cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
+else:
+    # No lane lines detected, fill the inner lane with the background color
+    cv2.fillPoly(road, [inner_lane], color=bg_color)   
 
     # Object detection
     classIds, confs, bbox = net.detect(img, confThreshold=thres)
@@ -442,6 +353,7 @@ def process_image(img):
     for i, detected_object in enumerate(detected_objects):
         cv2.putText(result, detected_object, (380, 20 + 25 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
+
     # Display detected object images at the top
     spacing = 20
     current_x = 500
@@ -484,10 +396,11 @@ while True:
     key = cv2.waitKey(1) & 0xFF
     if key == ord('s'):
         break
+    
+
 
 # Release video capture and close windows
 cv2.imshow('Result', result)
 cap.release()
 out.release()
 cv2.destroyAllWindows()
-pygame.quit()
