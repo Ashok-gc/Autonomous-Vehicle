@@ -8,8 +8,8 @@ from tracker import tracker
 from moviepy.editor import VideoFileClip
 
 pygame.init()
-screen = pygame.display.set_mode((640, 480))
-
+screen_width, screen_height = 640, 480
+screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.key.set_repeat()
 
 ser = serial.Serial('COM20', 9600, timeout=1)
@@ -74,6 +74,7 @@ def moveRight():
 def process_frame(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return gray
+
 f_Gear = ["First Gear", "Second Gear", "Third Gear", "Fourth Gear", "Fifth Gear",
           "Sixth Gear", "Seventh Gear", "Eighth Gear", "Ninth Gear", "Tenth Gear"]
 
@@ -112,6 +113,10 @@ if not cap.isOpened():
     sys.exit()
 
 _event = "STOP"
+
+# Create a Pygame surface for object detection display
+detection_surface = pygame.Surface((screen_width // 2, screen_height))
+
 while not exit_key_pressed:
     # Check for events
     for event in pygame.event.get():
@@ -183,34 +188,35 @@ while not exit_key_pressed:
                 object_too_close = True
 
     # Display the frame with objects
-    cv2.imshow("Object Detection", frame)
+    # cv2.imshow("Object Detection", frame)
 
     # Perform lane detection on the frame
     undistorted_img = cv2.undistort(frame, mtx, dist, None, mtx)
     processed_frame = process_frame(undistorted_img)
     processed_frames.append(processed_frame)
 
-    # Display the processed frame with lane detection
-    cv2.imshow("Lane Detection", processed_frame)
+    # Display the processed frame
+    # cv2.imshow("Lane Detection", processed_frame)
 
-    # Check for threat conditions
-    if object_inside_box:
-        if object_too_close:
-            if not warning_displayed:
-                print("Warning: Object too close!")
-                warning_displayed = True
-        else:
-            warning_displayed = False
-    else:
-        warning_displayed = False
+    # Combine the controller and object detection screens
+    resized_frame = cv2.resize(frame, (screen_width // 2, screen_height))
+    resized_frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
+    frame_surface = pygame.surfarray.make_surface(resized_frame_rgb)
+    screen.fill(bg_color)
+    screen.blit(frame_surface, (0, 0))
+    processed_frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_GRAY2RGB)
+    processed_frame_surface = pygame.surfarray.make_surface(processed_frame_rgb)
+    detection_surface.fill(bg_color)
+    detection_surface.blit(processed_frame_surface, (0, 0))
+    screen.blit(detection_surface, (screen_width // 2, 0))
 
-    # Update the display
+    # Display the screen
     pygame.display.flip()
 
-    # Check for the exit key again in case it was pressed during the loop
-    if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+    # Check if the exit key is pressed
+    if cv2.waitKey(1) == 27:
         exit_key_pressed = True
 
-# Release the video capture object and close any open windows
+# Release the video capture object and close all windows
 cap.release()
 cv2.destroyAllWindows()
