@@ -8,13 +8,12 @@ from tracker import tracker
 from moviepy.editor import VideoFileClip
 
 pygame.init()
-pygame.display.set_mode((640, 480))
+screen = pygame.display.set_mode((640, 480))
+
 pygame.key.set_repeat()
 
-
-ser = serial.Serial('COM9', 9600, timeout=1)
-
-ser.flush() 
+ser = serial.Serial('COM20', 9600, timeout=1)
+ser.flush()
 
 SPEED = 0  
 DIRECTION = 30  
@@ -45,6 +44,7 @@ net.setInputSwapRB(True)
 
 # Set threshold to detect objects
 thres = 0.45
+
 
 # Focal length of camera (in mm)
 focalLength = 10
