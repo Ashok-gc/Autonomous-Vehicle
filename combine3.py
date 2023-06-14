@@ -12,7 +12,7 @@ screen_width, screen_height = 640, 480
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.key.set_repeat()
 
-ser = serial.Serial('COM5', 9600, timeout=1)
+ser = serial.Serial('COM20', 9600, timeout=1)
 ser.flush()
 
 SPEED = 0
@@ -165,6 +165,9 @@ while not exit_key_pressed:
         print("Error reading frame")
         break
 
+    # Rotate the frame 90 degrees counter-clockwise
+    frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
     # Resize the frame
     frame = cv2.resize(frame, (640, 480))
 
@@ -198,19 +201,19 @@ while not exit_key_pressed:
     # Display the processed frame
     # cv2.imshow("Lane Detection", processed_frame)
 
-    # Combine the controller and object detection screens
-    resized_frame = cv2.resize(frame, (screen_width // 2, screen_height))
+# Combine the controller and object detection screens
+    resized_frame = cv2.resize(frame, (screen_width, screen_height))
     resized_frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
     frame_surface = pygame.surfarray.make_surface(resized_frame_rgb)
     screen.fill(bg_color)
-    screen.blit(frame_surface, (0, 0))
+    screen.blit(frame_surface, (0, 0), (0, 0, screen_width, screen_height))
     processed_frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_GRAY2RGB)
     processed_frame_surface = pygame.surfarray.make_surface(processed_frame_rgb)
     detection_surface.fill(bg_color)
-    detection_surface.blit(processed_frame_surface, (0, 0))
-    screen.blit(detection_surface, (screen_width // 1, 0))
     # Display the screen
     pygame.display.flip()
+
+
 
     # Check if the exit key is pressed
     if cv2.waitKey(1) == 27:
