@@ -12,7 +12,7 @@ screen_width, screen_height = 640, 480
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.key.set_repeat()
 
-ser = serial.Serial('COM5', 9600, timeout=1)
+ser = serial.Serial('COM19', 9600, timeout=1)
 ser.flush()
 
 SPEED = 0
@@ -105,7 +105,7 @@ def frontGear(SPEED):
 exit_key_pressed = False
 
 # Create a VideoCapture object
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("video.mp4")
 
 # Check if the video capture object was successfully initialized
 if not cap.isOpened():
@@ -166,7 +166,7 @@ while not exit_key_pressed:
         break
 
     # Resize the frame
-    frame = cv2.resize(frame, (640, 480))
+    frame = cv2.resize(frame, (840, 480))
 
     # Detect objects in the frame
     classIds, confs, bbox = net.detect(frame, confThreshold=thres)
@@ -208,7 +208,6 @@ while not exit_key_pressed:
     processed_frame_surface = pygame.surfarray.make_surface(processed_frame_rgb)
     detection_surface.fill(bg_color)
     detection_surface.blit(processed_frame_surface, (0, 0))
-    screen.blit(detection_surface, (screen_width // 1, 0))
     # Display the screen
     pygame.display.flip()
 

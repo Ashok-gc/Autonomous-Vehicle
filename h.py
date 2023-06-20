@@ -7,8 +7,6 @@ from moviepy.editor import VideoFileClip
 import pyrealsense2 as rs
 # import warnings
 
-import serial  
-
 object_inside_box = False
 
 
@@ -216,8 +214,6 @@ def process_image(img):
         cv2.fillPoly(road, [inner_lane], color=[0,0,255])  # Change inner lane color to red
     else:
         cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
-        
-
     cv2.fillPoly(road,[right_lane],color=[0,0,255])
     cv2.fillPoly(road_bkg,[left_lane],color=[255,255,255])
     cv2.fillPoly(road_bkg,[right_lane],color=[255,255,255])
@@ -377,34 +373,6 @@ cap = cv2.VideoCapture(0)
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
 out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
-OVERRIDE = True
-
-ser = serial.Serial('COM19', 9600, timeout=1) 
-ser.flush()  
-
-def override(key):
-    throttle = 0
-    direction = 30
-    if(key == ord('w')):
-        throttle = 10
-    elif(key == ord("x")):
-        throttle = -10
-    else:
-        throttle = 0
-    if(key == ord("a")):
-        direction = 0
-    elif(key == ord("d")):
-        direction = 60
-    else:
-        direction = 30
-    return throttle, direction
-
-
-def writeArduiono(d, s):
-    ACTION = (str(d) + "#" + str(s) + "\n").encode('utf-8')  
-    ser.write(ACTION)  
-    line = ser.readline().decode('utf-8').rstrip() 
-
 
 while True:
     success, img = cap.read()
@@ -416,25 +384,13 @@ while True:
     cv2.imshow("Output", result)
 
     # Exit on 's' key press
-    key = cv2.waitKey(60) & 0xFF
+    key = cv2.waitKey(1) & 0xFF
     if key == ord('s'):
         break
-
-    if key == ord('s'):
-        break
-    if key == ord('o'):
-        OVERRIDE = not OVERRIDE
-
-    if(OVERRIDE):
-        throttle, direction = override(key)
-        print(direction, throttle)
-        writeArduiono(direction, throttle)
-
-    else:
-        # automation
-        pass
     
 
+
+# Release video capture and close windows
 cv2.imshow('Result', result)
 cap.release()
 out.release()

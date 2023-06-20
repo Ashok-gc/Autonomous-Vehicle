@@ -2,15 +2,27 @@ import sys
 import cv2
 import numpy as np
 import pickle
+import serial
+import pygame
 from tracker import tracker
 from moviepy.editor import VideoFileClip
-import pyrealsense2 as rs
+
+pygame.init()
+screen_width, screen_height = 640, 480
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.key.set_repeat()
+
+ser = serial.Serial('COM19', 9600, timeout=1)
+ser.flush()
+
+SPEED = 0
+DIRECTION = 30
+
 # import warnings
 
-import serial  
-
 object_inside_box = False
-
+object_too_close = False
+warning_displayed = False
 
 # Load class names
 classNames = []
@@ -36,14 +48,11 @@ focalLength = 10
 # Define the background color
 bg_color = (117, 117, 117)
 
-#line color
+# line color
 line_color = (0, 0, 255)
 
 # Set threshold distance for objects
-object_distance_threshold = 0.6 # meters
-
-# Initialize a flag to check if any object is too close
-object_too_close = False
+object_distance_threshold = 0.6  # meters
 
 # Lane detection
 dist_pickle = pickle.load(open("models/calibration_pickle.p", "rb"))
@@ -51,8 +60,16 @@ mtx = dist_pickle["mtx"]
 dist = dist_pickle["dist"]
 processed_frames = []
 
+def writeArduino(d, s):
+    ACTION = (str(d) + "#" + str(s) + "\n").encode('utf-8')
+    ser.write(ACTION)
+    line = ser.readline().decode('utf-8').rstrip()
 
-# Functions for lane detection
+def moveLeft():
+    DIRECTION = 0
+
+def moveRight():
+    DIRECTION = 60
 def abs_sobel_thresh(img, orient='x', sobel_kernel=3, thresh=(0,255)):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     if orient == 'x':
@@ -119,6 +136,10 @@ def draw_thumbnails(img_cp, img, window_list, thumb_w=100, thumb_h=80, off_x=30,
         start_x = 300 + (i+1) * off_x + i * thumb_w
         img_cp[off_y + 30:off_y + thumb_h + 30, start_x:start_x + thumb_w, :] = vehicle_thumb
 
+
+def process_frame(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return gray
 
 def process_image(img):
 
@@ -216,8 +237,6 @@ def process_image(img):
         cv2.fillPoly(road, [inner_lane], color=[0,0,255])  # Change inner lane color to red
     else:
         cv2.fillPoly(road, [inner_lane], color=[0, 255, 0])
-        
-
     cv2.fillPoly(road,[right_lane],color=[0,0,255])
     cv2.fillPoly(road_bkg,[left_lane],color=[255,255,255])
     cv2.fillPoly(road_bkg,[right_lane],color=[255,255,255])
@@ -328,13 +347,13 @@ def process_image(img):
     cv2.rectangle(result, (0, 0), (img_width, 150), bg_color, -1)
 
     # Add the text on top of the background
-    cv2.putText(result, 'Lane Status', (80, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-    #radius of curvature
-    cv2.putText(result, 'Radius of curvature = '+str(round(curverad,3))+'(m)', (30, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-    #vehicle position
-    cv2.putText(result, 'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center', (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-    # Assistance
-    cv2.putText(result, 'Direction Assistance:'+ ' '+turn_direction, (30, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    # cv2.putText(result, 'Lane Status', (80, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    # #radius of curvature
+    # cv2.putText(result, 'Radius of curvature = '+str(round(curverad,3))+'(m)', (30, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    # #vehicle position
+    # cv2.putText(result, 'Vehicle Position: '+str(abs(round(center_diff,3)))+'m '+side_pos+' of center', (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+    # # Assistance
+    # cv2.putText(result, 'Direction Assistance:'+ ' '+turn_direction, (30, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
 # Draw a vertical line to separate text
     line_height = result.shape[0] // 5  # set the line height to half of the image height
@@ -371,71 +390,149 @@ def process_image(img):
     return final_result
 
 
-# For video clip or real-time
+f_Gear = ["First Gear", "Second Gear", "Third Gear", "Fourth Gear", "Fifth Gear",
+          "Sixth Gear", "Seventh Gear", "Eighth Gear", "Ninth Gear", "Tenth Gear"]
+
+
+def frontGear(SPEED):
+    if SPEED >= 1 and SPEED < 2:
+        print(f_Gear[0])
+    elif SPEED >= 2 and SPEED < 3:
+        print(f_Gear[1])
+    elif SPEED >= 3 and SPEED < 4:
+        print(f_Gear[2])
+    elif SPEED >= 4 and SPEED < 5:
+        print(f_Gear[3])
+    elif SPEED >= 5 and SPEED < 6:
+        print(f_Gear[4])
+    elif SPEED >= 6 and SPEED < 7:
+        print(f_Gear[5])
+    elif SPEED >= 7 and SPEED < 8:
+        print(f_Gear[6])
+    elif SPEED >= 8 and SPEED < 9:
+        print(f_Gear[7])
+    elif SPEED >= 9 and SPEED < 10:
+        print(f_Gear[8])
+    elif SPEED >= 10:
+        print(f_Gear[9])
+
+# Set the flag for the exit key
+exit_key_pressed = False
+
+# Create a VideoCapture object
 cap = cv2.VideoCapture(0)
 
-#output video
-fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
-out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
-OVERRIDE = True
+# Check if the video capture object was successfully initialized
+if not cap.isOpened():
+    print('Error opening video file')
+    sys.exit()
 
-ser = serial.Serial('COM19', 9600, timeout=1) 
-ser.flush()  
+_event = "STOP"
 
-def override(key):
-    throttle = 0
-    direction = 30
-    if(key == ord('w')):
-        throttle = 10
-    elif(key == ord("x")):
-        throttle = -10
-    else:
-        throttle = 0
-    if(key == ord("a")):
-        direction = 0
-    elif(key == ord("d")):
-        direction = 60
-    else:
-        direction = 30
-    return throttle, direction
+# Create a Pygame surface for object detection display
+detection_surface = pygame.Surface((screen_width // 2, screen_height))
 
-
-def writeArduiono(d, s):
-    ACTION = (str(d) + "#" + str(s) + "\n").encode('utf-8')  
-    ser.write(ACTION)  
-    line = ser.readline().decode('utf-8').rstrip() 
-
-
-while True:
-    success, img = cap.read()
-    result = process_image(img)
-
-    out.write(result)
-
-    # Display output image or video
-    cv2.imshow("Output", result)
-
-    # Exit on 's' key press
-    key = cv2.waitKey(60) & 0xFF
-    if key == ord('s'):
-        break
-
-    if key == ord('s'):
-        break
-    if key == ord('o'):
-        OVERRIDE = not OVERRIDE
-
-    if(OVERRIDE):
-        throttle, direction = override(key)
-        print(direction, throttle)
-        writeArduiono(direction, throttle)
-
-    else:
-        # automation
-        pass
+while not exit_key_pressed:
+    # Check for events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()  # Quit Pygame
+            exit_key_pressed = True
+            break
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                exit_key_pressed = True
+                break
+            if event.key == ord('w'):
+                _event = "FORWARD"
+                SPEED = 1
+            elif event.key == ord('s'):
+                _event = "BACKWARD"
+                SPEED = -1
+            if event.key == ord('a'):
+                DIRECTION = 60
+            elif event.key == ord('d'):
+                DIRECTION = 0
+        if event.type == pygame.KEYUP:
+            if event.key == ord('w') or event.key == ord('s'):
+                _event = "STOP"
+            if event.key == ord('a') or event.key == ord('d'):
+                DIRECTION = 30
+    if(_event == "FORWARD"):
+        if(SPEED < 10):
+            SPEED = SPEED + .02
+            frontGear(SPEED)
+    elif(_event == "BACKWARD"):
+        if(SPEED > -10):
+            SPEED = SPEED - .02
+    elif(_event == "STOP"):
+        if(SPEED > 0):
+            SPEED = SPEED - .1
+        elif(SPEED < 0):
+            SPEED = SPEED + .1
+    writeArduino(DIRECTION, SPEED)
     
+    # Get a frame from the camera
+    ret, frame = cap.read()
 
-cv2.imshow('Result', result)
+    # Check if a frame was successfully read
+    if not ret:
+        print("Error reading frame")
+        break
+
+    # Resize the frame
+    frame = cv2.resize(frame, (640, 480))
+    
+    # # Rotate the frame
+    frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+    # Detect objects in the frame
+    classIds, confs, bbox = net.detect(frame, confThreshold=thres)
+
+    # Draw bounding boxes and labels for detected objects
+    if len(classIds) > 0:
+        for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
+            cv2.rectangle(frame, box, color=(0, 255, 0), thickness=2)
+            cv2.putText(frame, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30), cv2.FONT_HERSHEY_COMPLEX,
+                        1, (0, 255, 0), 2)
+            object_inside_box = True
+
+            # Calculate the distance to the object
+            object_width = box[2] - box[0]
+            distance = (focalLength * 16) / object_width
+
+            # Check if the object is too close
+            if distance < object_distance_threshold:
+                object_too_close = True
+
+    # Display the frame with objects
+    # cv2.imshow("Object Detection", frame)
+
+    # Perform lane detection on the frame
+    undistorted_img = cv2.undistort(frame, mtx, dist, None, mtx)
+    processed_frame = process_frame(undistorted_img)
+    processed_frames.append(processed_frame)
+
+    # Display the processed frame
+    # cv2.imshow("Lane Detection", processed_frame)
+
+    # Combine the controller and object detection screens
+    resized_frame = cv2.resize(frame, (screen_height, screen_width // 2))
+    resized_frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
+    frame_surface = pygame.surfarray.make_surface(resized_frame_rgb)
+    screen.fill(bg_color)
+    screen.blit(frame_surface, (0, 0))
+    processed_frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_GRAY2RGB)
+    processed_frame_surface = pygame.surfarray.make_surface(processed_frame_rgb)
+    detection_surface.fill(bg_color)
+    detection_surface.blit(processed_frame_surface, (0, 0))
+    # Display the screen
+    pygame.display.flip()
+
+    # Check if the exit key is pressed
+    if cv2.waitKey(1) == 27:
+        exit_key_pressed = True
+
+# Release the video capture object and close all windows
 cap.release()
-out.release()
 cv2.destroyAllWindows()
