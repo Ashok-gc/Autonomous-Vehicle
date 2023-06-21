@@ -372,7 +372,7 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture("video.mp4")
+cap = cv2.VideoCapture(0)
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
@@ -385,7 +385,6 @@ ser.flush()
 def override(key):
     throttle = 0
     direction = 30
-    inner_lane = [0, 255, 0]
     if(key == ord('w')):
         throttle = 10
     elif(key == ord("x")):
@@ -398,11 +397,7 @@ def override(key):
         direction = 60
     else:
         direction = 30
-    if inner_lane == [0,255,0]:
-        throttle  = 10
-
     return throttle, direction
-
 
 
 def writeArduiono(d, s):
@@ -422,10 +417,18 @@ while True:
 
     # Exit on 's' key press
     key = cv2.waitKey(60) & 0xFF
-    if key == ord('s'):
+    # if key == ord('s'):
+    #     break
+
+    # if key == ord('s'):
+    #     break
+    # if key == ord('o'):
+    #     OVERRIDE = not OVERRIDE
+
+    if key == ord('e'):
         break
 
-    if key == ord('s'):
+    if key == ord('e'):
         break
     if key == ord('o'):
         OVERRIDE = not OVERRIDE
