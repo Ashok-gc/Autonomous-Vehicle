@@ -45,8 +45,63 @@ def detect_objects(image):
 
     return img, detected_objects, detected_boxes
 
+
+# Function for lane detection
+def detect_lanes(image):
+    # Convert image to HSV color space
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Define color ranges for white and yellow lanes
+    lower_white = np.array([0, 0, 200], dtype=np.uint8)
+    upper_white = np.array([180, 30, 255], dtype=np.uint8)
+    lower_yellow = np.array([20, 100, 100], dtype=np.uint8)
+    upper_yellow = np.array([40, 255, 255], dtype=np.uint8)
+
+    # Create masks to isolate white and yellow lanes
+    white_mask = cv2.inRange(hsv, lower_white, upper_white)
+    yellow_mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
+
+    # Combine the masks
+    lane_mask = cv2.bitwise_or(white_mask, yellow_mask)
+
+    # Apply Gaussian blur to reduce noise
+    blurred = cv2.GaussianBlur(lane_mask, (5, 5), 0)
+
+    # Perform Canny edge detection
+    edges = cv2.Canny(blurred, 50, 150)
+
+    # Define region of interest (ROI) for lane detection
+    height, width = edges.shape
+    roi_vertices = np.array([[(0, height), (width // 2, height // 2), (width, height)]], dtype=np.int32)
+    mask = np.zeros_like(edges)
+    cv2.fillPoly(mask, roi_vertices, 255)
+    masked_edges = cv2.bitwise_and(edges, mask)
+
+    # Perform Hough line detection
+    lines = cv2.HoughLinesP(masked_edges, 1, np.pi / 180, threshold=100, minLineLength=100, maxLineGap=50)
+
+    # Draw the detected lanes
+    lane_image = np.zeros_like(image)
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(lane_image, (x1, y1), (x2, y2), (0, 0, 255), thickness=15)
+
+    # Fill the detected lane area with color
+    lane_mask = np.zeros_like(image)
+    if lines is not None:
+        reshaped_lines = lines.reshape((-1, 1, 2))
+        cv2.fillPoly(lane_mask, [reshaped_lines], (0, 255, 0))
+
+    # Combine lane image with the original image
+    result = cv2.addWeighted(image, 1, lane_image, 0.8, 0)
+    result = cv2.addWeighted(result, 1, lane_mask, 0.3, 0)
+
+    return result
+
+
 # Open video capture
-video_path = 'challenge_video.mp4'
+video_path = 'video.mp4'
 cap = cv2.VideoCapture(video_path)
 
 # Check if video capture is successfully opened
@@ -54,22 +109,23 @@ if not cap.isOpened():
     print("Error opening video file")
     exit()
 
-# Read the first frame of the video
-ret, frame = cap.read()
+while True:
+    # Read the next frame from the video
+    ret, frame = cap.read()
 
-while ret:
-    # Perform object detection on the frame
-    result_frame, objects, boxes = detect_objects(frame)
+    if not ret:
+        # End of video
+        break
 
-    # Display the result frame with bounding boxes and labels
-    cv2.imshow('Object Detection', result_frame)
+    # Perform lane detection on the frame
+    result_frame = detect_lanes(frame)
+
+    # Display the result frame
+    cv2.imshow('Lane Detection', result_frame)
 
     # Exit if 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
-    # Read the next frame
-    ret, frame = cap.read()
 
 # Release the video capture and close windows
 cap.release()

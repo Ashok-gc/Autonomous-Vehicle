@@ -374,14 +374,14 @@ def process_image(img):
     return final_result
 
 # For video clip or real-time
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("video.mp4")
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
 out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
 OVERRIDE = True
 
-ser = serial.Serial('COM19', 9600, timeout=1) 
+ser = serial.Serial('COM9', 9600, timeout=1) 
 ser.flush()  
 
 def override(key):
