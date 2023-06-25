@@ -46,6 +46,7 @@ def detect_objects(image):
     return img, detected_objects, detected_boxes
 
 
+
 # Function for lane detection
 def detect_lanes(image):
     # Convert image to HSV color space
