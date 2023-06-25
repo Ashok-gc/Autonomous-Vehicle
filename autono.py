@@ -242,10 +242,13 @@ def process_image(img):
         side_pos = 'right'
     if center_diff > 0.2:
         turn_direction = 'Turn Right'
+        # direction = 60
     elif center_diff < -0.2:
         turn_direction = 'Turn Left'
+        # direction = 0
     else:
         turn_direction = 'Straight'
+        # direction = 10
         
 
     # Object detection
@@ -370,7 +373,6 @@ def process_image(img):
     final_result = cv2.addWeighted(result, 1, img, 0.5, 0)
     return final_result
 
-
 # For video clip or real-time
 cap = cv2.VideoCapture(0)
 
@@ -417,13 +419,13 @@ while True:
 
     # Exit on 's' key press
     key = cv2.waitKey(60) & 0xFF
-    # if key == ord('s'):
-    #     break
+    if key == ord('s'):
+        break
 
-    # if key == ord('s'):
-    #     break
-    # if key == ord('o'):
-    #     OVERRIDE = not OVERRIDE
+    if key == ord('s'):
+        break
+    if key == ord('o'):
+        OVERRIDE = not OVERRIDE
 
     if key == ord('e'):
         break

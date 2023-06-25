@@ -72,14 +72,14 @@ while not exit_key_pressed:
                 _event = "BACKWARD" 
                 SPEED = -1 
             if event.key == ord('a'):  
-                DIRECTION = 60 
+                DIRECTION = 0 
             elif event.key == ord('d'): 
-                DIRECTION = 0  
+                DIRECTION = 60  
         if event.type == pygame.KEYUP:  
             if event.key == ord('w') or event.key == ord('s'): 
                 _event = "STOP"  
             if event.key == ord('a') or event.key == ord('d'):  
-                DIRECTION = 30
+                DIRECTION = 30  
     if(_event == "FORWARD"): 
         if(SPEED < 10):  
             SPEED = SPEED + .02  
@@ -93,4 +93,4 @@ while not exit_key_pressed:
         elif(SPEED < 0): 
             SPEED = SPEED + .1  
     writeArduiono(DIRECTION, SPEED)  
-pygame.quit() 
+pygame.quit()

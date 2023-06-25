@@ -372,20 +372,19 @@ def process_image(img):
 
 
 # For video clip or real-time
-cap = cv2.VideoCapture("video.mp4")
+cap = cv2.VideoCapture(0)
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec
 out = cv2.VideoWriter('recorded_output.mp4', fourcc, 25, (1280, 720)) # output file name, codec, fps, size of frames
 OVERRIDE = True
 
-ser = serial.Serial('COM19', 9600, timeout=1) 
+ser = serial.Serial('COM20', 9600, timeout=1) 
 ser.flush()  
 
 def override(key):
     throttle = 0
     direction = 30
-    inner_lane = [0, 255, 0]
     if(key == ord('w')):
         throttle = 10
     elif(key == ord("x")):
@@ -398,11 +397,8 @@ def override(key):
         direction = 60
     else:
         direction = 30
-    if inner_lane == [0,255,0]:
-        throttle  = 10
-
+        
     return throttle, direction
-
 
 
 def writeArduiono(d, s):
