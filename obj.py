@@ -45,8 +45,7 @@ def detect_objects(image):
 
     return img, detected_objects, detected_boxes
 
-
-
+# Function for lane detection
 # Function for lane detection
 def detect_lanes(image):
     # Convert image to HSV color space
@@ -86,47 +85,42 @@ def detect_lanes(image):
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            cv2.line(lane_image, (x1, y1), (x2, y2), (0, 0, 255), thickness=15)
-
-    # Fill the detected lane area with color
-    lane_mask = np.zeros_like(image)
-    if lines is not None:
-        reshaped_lines = lines.reshape((-1, 1, 2))
-        cv2.fillPoly(lane_mask, [reshaped_lines], (0, 255, 0))
+            cv2.line(lane_image, (x1, y1), (x2, y2), (0, 0, 255), thickness=3)
 
     # Combine lane image with the original image
     result = cv2.addWeighted(image, 1, lane_image, 0.8, 0)
-    result = cv2.addWeighted(result, 1, lane_mask, 0.3, 0)
 
     return result
 
 
 # Open video capture
-video_path = 'video.mp4'
-cap = cv2.VideoCapture(video_path)
+# video_path = 'video.mp4'
+cap = cv2.VideoCapture(0)
 
 # Check if video capture is successfully opened
 if not cap.isOpened():
     print("Error opening video file")
     exit()
 
-while True:
-    # Read the next frame from the video
-    ret, frame = cap.read()
+# Read the first frame of the video
+ret, frame = cap.read()
 
-    if not ret:
-        # End of video
-        break
+while ret:
+    # Perform object detection on the frame
+    result_frame, objects, boxes = detect_objects(frame)
 
     # Perform lane detection on the frame
-    result_frame = detect_lanes(frame)
+    result_frame = detect_lanes(result_frame)
 
-    # Display the result frame
-    cv2.imshow('Lane Detection', result_frame)
+    # Display the result frame with bounding boxes and lanes
+    cv2.imshow('Object and Lane Detection', result_frame)
 
     # Exit if 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+
+    # Read the next frame
+    ret, frame = cap.read()
 
 # Release the video capture and close windows
 cap.release()
