@@ -7,7 +7,7 @@ pygame.init()
 pygame.display.set_mode(size=(640, 480)) 
 pygame.key.set_repeat()  
 
-ser = serial.Serial('COM20', 9600, timeout=1) 
+ser = serial.Serial('COM19', 9600, timeout=1) 
 ser.flush()  
 
 SPEED = 0  
@@ -76,9 +76,9 @@ while not exit_key_pressed:
             elif event.key == ord('d'): 
                 DIRECTION = 60  
         if event.type == pygame.KEYUP:  
-            if event.key == ord('w') or event.key == ord('s'): 
+            if event.key == ord('s') or event.key == ord('w'): 
                 _event = "STOP"  
-            if event.key == ord('a') or event.key == ord('d'):  
+            if event.key == ord('d') or event.key == ord('a'):  
                 DIRECTION = 30  
     if(_event == "FORWARD"): 
         if(SPEED < 10):  
