@@ -108,7 +108,7 @@ def process_frame(image):
     cv2.imshow("Result", result)
     cv2.waitKey(1)  # Add a small delay to allow the window to refresh
 
-video_path = "harder_challenge_video.mp4"
+video_path = "lane.mp4"
 cap = cv2.VideoCapture(video_path)
 
 while cap.isOpened():

@@ -83,7 +83,7 @@ def detect_lanes(frame, left_color=(255, 0, 0), right_color=(128, 0, 128)):
 
 
 # Load the MP4 video file
-video_file = 'harder_challenge_video.mp4'
+video_file = 'lane.mp4'
 cap = cv2.VideoCapture(video_file)
 
 try:

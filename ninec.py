@@ -72,7 +72,7 @@ def detect_lanes(image):
 
 
 # Function to fit a lane line using polynomial regression
-def fit_lane_line(lines, height):
+def fit_lane_line(lines, height, prev_fit=None, alpha=0.1):
     if len(lines) == 0:
         return None
 
@@ -86,7 +86,11 @@ def fit_lane_line(lines, height):
         ys.append(y1)
         ys.append(y2)
 
-    fit = np.polyfit(ys, xs, deg=2)  # Use degree 2 for polynomial curve fitting
+    fit = np.polyfit(ys, xs, deg=2)
+
+    # Smooth the lane fit using previous frame's fit
+    if prev_fit is not None:
+        fit = alpha * fit + (1 - alpha) * prev_fit # Use degree 2 for polynomial curve fitting
     min_y = int(height * 0.7)
     max_y = height
 
@@ -104,7 +108,7 @@ def draw_curve(image, curve_points, color, thickness):
 
 
 # Main loop
-cap = cv2.VideoCapture("videoo.mp4")
+cap = cv2.VideoCapture("lane.mp4")
 
 while cap.isOpened():
     ret, frame = cap.read()
