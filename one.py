@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import pyrealsense2 as rs
 
 def detect_lanes(image):
     # Define region of interest (ROI)
@@ -78,7 +79,7 @@ def draw_lane(image, lane):
     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), thickness=20)
 
 # Main loop
-cap = cv2.VideoCapture(1)  # Replace 0 with the camera index if multiple cameras are connected
+cap = cv2.VideoCapture(0)  # Replace 0 with the camera index if multiple cameras are connected
 
 while True:
     ret, frame = cap.read()
