@@ -94,8 +94,8 @@ def detect_lanes(image):
 
 
 # Open video capture
-# video_path = 'video.mp4'
-cap = cv2.VideoCapture(0)
+video_path = 'video.mp4'
+cap = cv2.VideoCapture(video_path)
 
 # Check if video capture is successfully opened
 if not cap.isOpened():

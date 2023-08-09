@@ -348,7 +348,7 @@ def process_image(img):
     return final_result
 
 # For video clip or real-time
-cap = cv2.VideoCapture("video.mp4")
+cap = cv2.VideoCapture(0)
 
 #output video
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # codec

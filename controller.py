@@ -7,7 +7,7 @@ pygame.init()
 pygame.display.set_mode(size=(640, 480)) 
 pygame.key.set_repeat()  
 
-ser = serial.Serial('COM20', 9600, timeout=1) 
+ser = serial.Serial('COM19', 9600, timeout=1) 
 ser.flush()  
 
 SPEED = 0  

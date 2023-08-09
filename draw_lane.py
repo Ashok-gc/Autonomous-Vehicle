@@ -43,7 +43,7 @@ def draw_lane_lines(image, lines, color=(0, 255, 0), thickness=3):
     return result
 
 # Load the image
-image = cv2.imread('image.jpg')
+image = cv2.imread('road.jpeg')
 
 # Detect lane lines
 edges = detect_lane_lines(image)
